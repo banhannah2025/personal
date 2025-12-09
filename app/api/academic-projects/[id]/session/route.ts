@@ -2,29 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdminClient } from "@/lib/supabase";
 
-type Params = {
-  params: {
-    id: string;
-  };
-};
-
 async function requireUser() {
   const user = await currentUser();
   if (!user) throw new Error("unauthorized");
   return user;
 }
 
-export async function POST(request: NextRequest, { params }: Params) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await context.params;
     const user = await requireUser();
     if (!supabaseAdminClient) {
       return NextResponse.json({ error: "Supabase client missing" }, { status: 500 });
     }
-    const projectId = params.id;
     const { data: project, error: projectError } = await supabaseAdminClient
       .from("academic_projects")
       .select("id, title, question, instructions, discipline, session_id")
-      .eq("id", projectId)
+      .eq("id", id)
       .eq("user_id", user.id)
       .single();
     if (projectError || !project) {
