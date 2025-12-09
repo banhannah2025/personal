@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.86.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "core-js": "^3.47.0",
     "docx": "^8.6.0",
     "groq-sdk": "^0.37.0",
     "jspdf": "^2.5.2",

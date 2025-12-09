@@ -26,6 +26,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      core-js:
+        specifier: ^3.47.0
+        version: 3.47.0
       docx:
         specifier: ^8.6.0
         version: 8.6.0
@@ -4381,8 +4384,7 @@ snapshots:
 
   cookie@1.0.2: {}
 
-  core-js@3.47.0:
-    optional: true
+  core-js@3.47.0: {}
 
   core-util-is@1.0.3: {}
 
