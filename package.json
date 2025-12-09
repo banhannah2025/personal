@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.15.1",
   "private": true,
   "scripts": {
+    "preinstall": "pnpm approve-builds esbuild sharp unrs-resolver || true",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
