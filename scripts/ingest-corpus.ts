@@ -4,9 +4,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 
-import pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 import OpenAI from "openai";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 type DomainType = "legal" | "academic";
 
@@ -134,8 +134,13 @@ async function extractText(filePath: string): Promise<string> {
       return await fs.readFile(filePath, "utf8");
     case ".pdf": {
       const buffer = await fs.readFile(filePath);
-      const parsed = await pdfParse(buffer);
-      return parsed.text;
+      const parser = new PDFParse({ data: buffer });
+      try {
+        const parsed = await parser.getText();
+        return parsed.text ?? "";
+      } finally {
+        await parser.destroy().catch(() => undefined);
+      }
     }
     default:
       return "";
@@ -166,7 +171,7 @@ function hashBuffer(buffer: Buffer): string {
 }
 
 async function ingestCorpus(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   openai: OpenAI,
   corpus: CorpusRow,
   opts: CliOptions
@@ -304,7 +309,7 @@ async function main() {
   const supabaseKey = assertEnv("SUPABASE_SECRET_KEY", process.env.SUPABASE_SECRET_KEY);
   const openaiKey = assertEnv("OPENAI_API_KEY", process.env.OPENAI_API_KEY);
 
-  const supabase = createClient(supabaseUrl, supabaseKey, {
+  const supabase: SupabaseClient = createClient<any>(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
   });
   const openai = new OpenAI({ apiKey: openaiKey });

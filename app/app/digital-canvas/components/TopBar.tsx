@@ -8,9 +8,9 @@ import { useCanvasStore } from "../store";
 import type { AiDialogMode } from "./AiPromptDialog";
 
 type TopBarProps = {
-  stageRef: React.RefObject<StageType>;
+  stageRef: React.RefObject<StageType | null>;
   onOpenDialog: (mode: AiDialogMode) => void;
-  activeTool: "default" | "line" | "freehand";
+  activeTool: "default" | "line" | "freehand" | "eraser";
   onToolChange: (tool: "default" | "line" | "freehand" | "eraser") => void;
   strokeWidth: number;
   onStrokeWidthChange: (value: number) => void;
@@ -31,23 +31,20 @@ export function TopBar({
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
   const elementsCount = useCanvasStore((state) => state.elements.length);
-  const backgroundColor = useCanvasStore((state) => state.backgroundColor);
 
   const handleExport = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const transparent = backgroundColor === "transparent";
     const dataUrl = stage.toDataURL({
       pixelRatio: 2,
       mimeType: "image/png",
       quality: 1,
-      backgroundColor: transparent ? undefined : backgroundColor,
     });
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = `digital-canvas-${Date.now()}.png`;
     link.click();
-  }, [stageRef, backgroundColor]);
+  }, [stageRef]);
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 shadow-inner shadow-black/10">

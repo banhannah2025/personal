@@ -84,7 +84,7 @@ const roadmap = [
 ];
 
 export default async function Home() {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (userId) {
     redirect("/app");
   }

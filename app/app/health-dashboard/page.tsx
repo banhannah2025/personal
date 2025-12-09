@@ -65,7 +65,12 @@ export default function HealthDashboardPage() {
   const [budgetForm, setBudgetForm] = useState({ category: "", monthly: "" });
 
   const [journalEntries, setJournalEntries] = useState<HealthJournalEntry[]>([]);
-  const [journalForm, setJournalForm] = useState({
+  const [journalForm, setJournalForm] = useState<{
+    mood: (typeof moods)[number];
+    energy: (typeof energyLevels)[number];
+    concerns: string;
+    goalsImpact: string;
+  }>({
     mood: moods[0],
     energy: energyLevels[1],
     concerns: "",
@@ -624,7 +629,10 @@ export default function HealthDashboardPage() {
               <select
                 value={journalForm.mood}
                 onChange={(event) =>
-                  setJournalForm((prev) => ({ ...prev, mood: event.target.value }))
+                  setJournalForm((prev) => ({
+                    ...prev,
+                    mood: event.target.value as (typeof moods)[number],
+                  }))
                 }
                 className="rounded-2xl border border-border/60 bg-background/70 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
@@ -642,7 +650,10 @@ export default function HealthDashboardPage() {
               <select
                 value={journalForm.energy}
                 onChange={(event) =>
-                  setJournalForm((prev) => ({ ...prev, energy: event.target.value }))
+                  setJournalForm((prev) => ({
+                    ...prev,
+                    energy: event.target.value as (typeof energyLevels)[number],
+                  }))
                 }
                 className="rounded-2xl border border-border/60 bg-background/70 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >

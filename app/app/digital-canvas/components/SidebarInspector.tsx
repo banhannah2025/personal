@@ -20,7 +20,7 @@ import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCanvasStore } from "../store";
-import type { CanvasElement } from "../types";
+import type { CanvasElement, ShapeElement, PathElement } from "../types";
 import { AiInstructionPanel } from "./AiInstructionPanel";
 
 type SidebarInspectorProps = {
@@ -40,7 +40,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
   const backgroundColor = useCanvasStore((state) => state.backgroundColor);
   const setBackgroundColor = useCanvasStore((state) => state.setBackgroundColor);
 
-  const handleNumericChange = (field: keyof CanvasElement, value: number) => {
+  const handleNumericChange = (field: keyof CanvasElement | string, value: number) => {
     if (!selectedElement) return;
     if (Number.isNaN(value)) return;
     updateElement(selectedElement.id, { [field]: value } as Partial<CanvasElement>);
@@ -51,7 +51,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
     updateElement(selectedElement.id, { opacity: value } as Partial<CanvasElement>);
   };
 
-  const handleColorChange = (field: keyof CanvasElement, value: string) => {
+  const handleColorChange = (field: keyof CanvasElement | string, value: string) => {
     if (!selectedElement) return;
     updateElement(selectedElement.id, { [field]: value } as Partial<CanvasElement>);
   };
@@ -87,11 +87,17 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
     "octagon",
     "half-octagon",
   ]);
-  const isShapeElement = selectedElement && shapeTypes.has(selectedElement.type);
-  const isPathElement =
-    selectedElement && (selectedElement.type === "line" || selectedElement.type === "freehand");
-  const supportsCornerControls =
-    selectedElement && ["rect", "pill"].includes(selectedElement.type);
+
+  const isShape = (element: CanvasElement | undefined): element is ShapeElement =>
+    Boolean(element && shapeTypes.has(element.type));
+  const isPath = (element: CanvasElement | undefined): element is PathElement =>
+    Boolean(element && (element.type === "line" || element.type === "freehand"));
+
+  const shapeElement = isShape(selectedElement) ? selectedElement : null;
+  const pathElement = isPath(selectedElement) ? selectedElement : null;
+  const textElement = selectedElement?.type === "text" ? selectedElement : null;
+  const imageElement = selectedElement?.type === "image" ? selectedElement : null;
+  const supportsCornerControls = Boolean(shapeElement && ["rect", "pill"].includes(shapeElement.type));
 
   const layerIconMap: Record<CanvasElement["type"], LucideIcon> = {
     text: Type,
@@ -174,12 +180,12 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
             className="mt-2 w-full"
           />
         </label>
-        {selectedElement.type === "text" ? (
+        {textElement ? (
           <div className="space-y-3">
             <label className="block text-xs uppercase tracking-[0.3em] text-muted-foreground">
               Copy
               <textarea
-                value={selectedElement.text}
+                value={textElement.text}
                 onChange={(event) => handleTextChange(event.target.value)}
                 className="mt-2 h-24 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm text-foreground"
               />
@@ -190,7 +196,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
                 type="number"
                 min={8}
                 max={200}
-                value={selectedElement.fontSize}
+                value={textElement.fontSize}
                 onChange={(event) => handleNumericChange("fontSize" as keyof CanvasElement, Number(event.target.value))}
                 className="mt-2 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm"
               />
@@ -199,8 +205,8 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
               Font family
               <select
                 value={
-                  fontOptions.find((option) => option.value === selectedElement.fontFamily)?.value ||
-                  selectedElement.fontFamily
+                  fontOptions.find((option) => option.value === textElement.fontFamily)?.value ||
+                  textElement.fontFamily
                 }
                 onChange={(event) => handleColorChange("fontFamily" as keyof CanvasElement, event.target.value)}
                 className="mt-2 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm capitalize"
@@ -216,21 +222,21 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
               Color
               <input
                 type="color"
-                value={selectedElement.fill}
+                value={textElement.fill}
                 onChange={(event) => handleColorChange("fill" as keyof CanvasElement, event.target.value)}
                 className="mt-2 h-10 w-full rounded-xl border border-border/60 bg-card/80"
               />
             </label>
           </div>
         ) : null}
-        {isShapeElement ? (
+        {shapeElement ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Width
                 <input
                   type="number"
-                  value={selectedElement.width}
+                  value={shapeElement.width}
                   onChange={(event) => handleNumericChange("width", Number(event.target.value))}
                   className="mt-2 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm"
                 />
@@ -239,7 +245,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
                 Height
                 <input
                   type="number"
-                  value={selectedElement.height}
+                  value={shapeElement.height}
                   onChange={(event) => handleNumericChange("height", Number(event.target.value))}
                   className="mt-2 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm"
                 />
@@ -249,7 +255,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
               Fill
               <input
                 type="color"
-                value={selectedElement.fill}
+                value={shapeElement.fill}
                 onChange={(event) => handleColorChange("fill", event.target.value)}
                 className="mt-2 h-10 w-full rounded-xl border border-border/60 bg-card/80"
               />
@@ -261,7 +267,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
                   type="number"
                   min={0}
                   max={200}
-                  value={selectedElement.borderRadius ?? 0}
+                  value={shapeElement.borderRadius ?? 0}
                   onChange={(event) =>
                     handleNumericChange("borderRadius" as keyof CanvasElement, Number(event.target.value))
                   }
@@ -271,13 +277,13 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
             ) : null}
           </div>
         ) : null}
-        {isPathElement ? (
+        {pathElement ? (
           <div className="space-y-3">
             <label className="block text-xs uppercase tracking-[0.3em] text-muted-foreground">
               Stroke color
               <input
                 type="color"
-                value={selectedElement.stroke ?? "#111827"}
+                value={pathElement.stroke ?? "#111827"}
                 onChange={(event) => handleColorChange("stroke" as keyof CanvasElement, event.target.value)}
                 className="mt-2 h-10 w-full rounded-xl border border-border/60 bg-card/80"
               />
@@ -288,7 +294,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
                 type="range"
                 min={1}
                 max={20}
-                value={selectedElement.strokeWidth ?? 3}
+                value={pathElement.strokeWidth ?? 3}
                 onChange={(event) =>
                   handleNumericChange("strokeWidth" as keyof CanvasElement, Number(event.target.value))
                 }
@@ -297,14 +303,14 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
             </label>
           </div>
         ) : null}
-        {selectedElement.type === "image" ? (
+        {imageElement ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Width
                 <input
                   type="number"
-                  value={selectedElement.width}
+                  value={imageElement.width}
                   onChange={(event) => handleNumericChange("width", Number(event.target.value))}
                   className="mt-2 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm"
                 />
@@ -313,7 +319,7 @@ export function SidebarInspector({ onRequestPalette, onRequestLayout }: SidebarI
                 Height
                 <input
                   type="number"
-                  value={selectedElement.height}
+                  value={imageElement.height}
                   onChange={(event) => handleNumericChange("height", Number(event.target.value))}
                   className="mt-2 w-full rounded-xl border border-border/60 bg-card/80 p-2 text-sm"
                 />

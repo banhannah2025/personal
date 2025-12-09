@@ -148,12 +148,20 @@ Reference real authority when possible using the CourtListener snippets provided
           content: `Case summary:\n${caseSummary}\n\nCourtListener snippets:\n${courtListenerPrompt || "None"}`,
         },
       ],
-      response_format: { type: "json_object" },
       max_output_tokens: 1200,
     });
 
-    const content = completion.output?.[0]?.content?.[0];
-    const raw = content && content.type === "output_text" ? content.text : "{}";
+    type OutputText = { type: "output_text"; text: string };
+    type OutputMessage = { type: "message"; content: OutputText[] };
+    type SafeOutput = OutputText | OutputMessage | undefined;
+
+    const firstOutput = completion.output?.[0] as SafeOutput;
+    const raw =
+      (firstOutput?.type === "message"
+        ? firstOutput.content.find((part) => part.type === "output_text")?.text
+        : firstOutput?.type === "output_text"
+        ? firstOutput.text
+        : null) ?? "{}";
     let parsed: { suggestions?: Suggestion[]; citations?: string[]; warnings?: string[] };
     try {
       parsed = JSON.parse(raw);

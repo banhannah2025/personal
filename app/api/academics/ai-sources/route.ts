@@ -20,7 +20,8 @@ export async function GET() {
   if (!supabaseAdminClient) {
     return NextResponse.json({ error: "Supabase client missing" }, { status: 500 });
   }
-  const { data, error } = await supabaseAdminClient
+  const supabase = supabaseAdminClient;
+  const { data, error } = await supabase
     .from("ai_research_sources")
     .select("id, query, title, summary, url, insights, storage_path, created_at")
     .order("created_at", { ascending: false });
@@ -34,7 +35,7 @@ export async function GET() {
       if (!entry.storage_path) {
         return { ...entry, downloadUrl: null };
       }
-      const { data: signed, error: signedError } = await supabaseAdminClient.storage
+      const { data: signed, error: signedError } = await supabase.storage
         .from(BUCKET)
         .createSignedUrl(entry.storage_path, 60 * 60); // 1 hour
       if (signedError) {

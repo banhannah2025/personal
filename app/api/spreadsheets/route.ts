@@ -23,7 +23,6 @@ export type CellData = {
 
 type SpreadsheetRow = {
   id: string;
-  user_id: string;
   title: string | null;
   description: string | null;
   cells: Record<string, CellData> | null;

@@ -6,7 +6,7 @@ import type { LayoutSuggestion, LayoutPattern } from "@/app/app/digital-canvas/t
 
 type AiContentChunk = { type: string; text?: string; json?: unknown };
 type AiResponseBlock = { content?: AiContentChunk[] };
-type AiResponsePayload = { output?: AiResponseBlock[] };
+type AiResponsePayload = { output?: unknown };
 
 const LAYOUT_LIBRARY: LayoutSuggestion[] = [
   {
@@ -63,7 +63,7 @@ function ensureSuggestion(suggestion: Partial<LayoutSuggestion>, prompt: string)
 }
 
 function extractJson<T>(response: AiResponsePayload): T | null {
-  const blocks = response.output ?? [];
+  const blocks = (response.output ?? []) as AiResponseBlock[];
   for (const block of blocks) {
     for (const item of block.content ?? []) {
       if (item.type === "output_json" && item.json) {
@@ -117,7 +117,6 @@ export async function POST(request: Request) {
           content: `Prompt: ${prompt}`,
         },
       ],
-      response_format: { type: "json_object" },
       max_output_tokens: 600,
     });
 

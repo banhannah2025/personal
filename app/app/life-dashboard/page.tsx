@@ -179,7 +179,10 @@ export default function LifeDashboardPage() {
       createdAt: new Date().toISOString(),
     },
   ]);
-  const [journalForm, setJournalForm] = useState({
+  const [journalForm, setJournalForm] = useState<{
+    mood: (typeof journalMoods)[number];
+    reflection: string;
+  }>({
     mood: journalMoods[0],
     reflection: "",
   });
@@ -488,7 +491,10 @@ export default function LifeDashboardPage() {
               <select
                 value={journalForm.mood}
                 onChange={(event) =>
-                  setJournalForm((prev) => ({ ...prev, mood: event.target.value }))
+                  setJournalForm((prev) => ({
+                    ...prev,
+                    mood: event.target.value as (typeof journalMoods)[number],
+                  }))
                 }
                 className="rounded-2xl border border-border/60 bg-background/70 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >

@@ -36,7 +36,6 @@ type Witness = {
 
 type CaseRecordRow = {
   id: string;
-  user_id: string;
   title: string | null;
   docket: string | null;
   jurisdiction: string | null;
@@ -97,7 +96,9 @@ export async function GET() {
     }
     const { data, error } = await supabaseAdminClient
       .from("case_records")
-      .select("id, title, docket, jurisdiction, desired_outcome, parties, entries, law_references, created_at, updated_at")
+      .select(
+        "id, title, docket, jurisdiction, desired_outcome, parties, witnesses, entries, law_references, created_at, updated_at"
+      )
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false })
       .limit(MAX_CASES_PER_USER);

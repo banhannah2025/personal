@@ -160,7 +160,13 @@ export async function POST(request: Request) {
       ],
     });
 
-    const raw = completion.output?.[0]?.content?.[0];
+    type OutputText = { type: "output_text"; text: string };
+    type OutputMessage = { type: "message"; content: OutputText[] };
+    const firstOutput = completion.output?.[0] as OutputText | OutputMessage | undefined;
+    const raw =
+      firstOutput?.type === "message"
+        ? firstOutput.content.find((part) => part.type === "output_text")
+        : firstOutput;
     if (!raw) {
       return NextResponse.json(fallback);
     }

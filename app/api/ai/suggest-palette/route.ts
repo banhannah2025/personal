@@ -6,7 +6,7 @@ import { openaiClient, DEFAULT_COMPLETION_MODEL } from "@/lib/aiClients";
 type PaletteResponse = { colors: string[]; description: string };
 type AiContentChunk = { type: string; text?: string; json?: unknown };
 type AiResponseBlock = { content?: AiContentChunk[] };
-type AiResponsePayload = { output?: AiResponseBlock[] };
+type AiResponsePayload = { output?: unknown };
 
 const FALLBACK_MESSAGE = "Palette suggested offline. Use AI again for richer context.";
 const PALETTE_MODEL = process.env.DIGITAL_CANVAS_ASSISTANT_MODEL ?? DEFAULT_COMPLETION_MODEL;
@@ -30,7 +30,7 @@ function buildFallbackPalette(prompt: string): PaletteResponse {
 }
 
 function extractJson<T>(response: AiResponsePayload): T | null {
-  const blocks = response.output ?? [];
+  const blocks = (response.output ?? []) as AiResponseBlock[];
   for (const block of blocks) {
     for (const item of block.content ?? []) {
       if (item.type === "output_json" && item.json) {
@@ -84,7 +84,6 @@ export async function POST(request: Request) {
           content: `Prompt: ${prompt}`,
         },
       ],
-      response_format: { type: "json_object" },
       max_output_tokens: 400,
     });
 

@@ -1,13 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { runTrainingPipeline } from "@/lib/trainingPipeline";
 import { supabaseAdminClient } from "@/lib/supabase";
-
-type Params = {
-  params: {
-    id: string;
-  };
-};
 
 async function ensureAuth() {
   const user = await currentUser();
@@ -17,11 +11,12 @@ async function ensureAuth() {
   return null;
 }
 
-export async function POST(request: Request, { params }: Params) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const unauthorized = await ensureAuth();
   if (unauthorized) {
     return unauthorized;
   }
+  const { id } = await context.params;
   if (!supabaseAdminClient) {
     return NextResponse.json({ error: "Supabase client missing" }, { status: 500 });
   }
@@ -46,7 +41,7 @@ export async function POST(request: Request, { params }: Params) {
   const { data: session, error: sessionError } = await supabaseAdminClient
     .from("training_sessions")
     .select("id, domain")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (sessionError || !session) {

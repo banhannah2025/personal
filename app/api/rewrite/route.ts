@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     const completion = await openai.chat.completions.create({
       model,
       temperature: 0.2,
-      max_output_tokens: reasoningLevel.maxOutputTokens,
+      max_tokens: reasoningLevel.maxOutputTokens,
       messages: [
         {
           role: "system",

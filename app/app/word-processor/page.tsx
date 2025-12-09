@@ -91,14 +91,19 @@ type Margins = {
   left: number;
 };
 
-const DEFAULT_BORDER_SIDES = {
+type BorderSides = {
+  top: boolean;
+  right: boolean;
+  bottom: boolean;
+  left: boolean;
+};
+
+const DEFAULT_BORDER_SIDES: BorderSides = {
   top: true,
   right: true,
   bottom: true,
   left: true,
-} as const;
-
-type BorderSides = typeof DEFAULT_BORDER_SIDES;
+};
 type BorderSideKey = keyof BorderSides;
 
 const DEFAULT_MARGINS_INCHES: Margins = { top: 1, right: 1, bottom: 1, left: 1 };
@@ -230,10 +235,10 @@ export default function WordProcessorPage() {
       borderRightWidth: borderSides.right ? option.width : 0,
       borderBottomWidth: borderSides.bottom ? option.width : 0,
       borderLeftWidth: borderSides.left ? option.width : 0,
-      borderTopStyle: borderSides.top ? option.cssStyle : "none",
-      borderRightStyle: borderSides.right ? option.cssStyle : "none",
-      borderBottomStyle: borderSides.bottom ? option.cssStyle : "none",
-      borderLeftStyle: borderSides.left ? option.cssStyle : "none",
+      borderTopStyle: borderSides.top ? (option.cssStyle as CSSProperties["borderTopStyle"]) : "none",
+      borderRightStyle: borderSides.right ? (option.cssStyle as CSSProperties["borderRightStyle"]) : "none",
+      borderBottomStyle: borderSides.bottom ? (option.cssStyle as CSSProperties["borderBottomStyle"]) : "none",
+      borderLeftStyle: borderSides.left ? (option.cssStyle as CSSProperties["borderLeftStyle"]) : "none",
       borderColor: option.color,
     };
     return style;

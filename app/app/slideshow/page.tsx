@@ -625,8 +625,8 @@ export default function SlideShowPage() {
         fontSize: 20,
         color: slide.bodyColor || "#0f172a",
       });
-      if (slide.notes) {
-        s.notes = slide.notes;
+      if (slide.notes?.trim()) {
+        (s as { addNotes?: (text: string) => void }).addNotes?.(slide.notes);
       }
     });
     await pptx.writeFile({ fileName: `${title.trim() || "slideshow"}.pptx` });

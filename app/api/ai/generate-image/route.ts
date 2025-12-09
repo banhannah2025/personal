@@ -4,9 +4,14 @@ import { openaiClient } from "@/lib/aiClients";
 
 const DEFAULT_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1";
 const DEFAULT_IMAGE_SIZE = (process.env.DIGITAL_CANVAS_IMAGE_SIZE ?? "1024x1024") as
+  | "256x256"
   | "512x512"
   | "1024x1024"
-  | "2048x2048";
+  | "1024x1792"
+  | "1792x1024"
+  | "1536x1024"
+  | "1024x1536"
+  | "auto";
 
 function buildPlaceholder(prompt: string) {
   const sanitized = encodeURIComponent(prompt.slice(0, 32) || "Digital Canvas");
@@ -45,7 +50,7 @@ export async function POST(request: Request) {
       quality: "standard",
       response_format: "b64_json",
     });
-    const b64 = response.data[0]?.b64_json;
+    const b64 = response.data?.[0]?.b64_json;
     if (!b64) {
       return NextResponse.json({ imageUrl: placeholderUrl, provider: "placeholder" });
     }

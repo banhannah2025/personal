@@ -83,9 +83,23 @@ export async function POST(request: Request) {
       max_output_tokens: 1500,
     });
 
-    const content = completion.output?.[0]?.content?.[0];
-    const answer =
-      content && content.type === "output_text" ? content.text : JSON.stringify(completion.output);
+    type OutputText = { type: "output_text"; text: string };
+    type OutputMessage = { type: "message"; content: OutputText[] };
+    type SafeOutput = OutputText | OutputMessage;
+
+    const firstOutput = completion.output?.[0] as SafeOutput | undefined;
+
+    let answer =
+      completion.output_text?.trim() ||
+      (firstOutput?.type === "output_text"
+        ? firstOutput.text
+        : firstOutput?.type === "message"
+        ? firstOutput.content.find((part) => part.type === "output_text")?.text
+        : undefined);
+
+    if (!answer) {
+      answer = JSON.stringify(completion.output ?? []);
+    }
 
     const citations = chunks.map((chunk, index) => ({
       source: `Source ${index + 1}`,

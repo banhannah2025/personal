@@ -15,7 +15,6 @@ type Slide = {
 
 type SlideDeckRow = {
   id: string;
-  user_id: string;
   title: string | null;
   description: string | null;
   slides: Slide[] | null;

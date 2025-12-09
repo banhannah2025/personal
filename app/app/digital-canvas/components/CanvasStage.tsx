@@ -104,7 +104,6 @@ export const CanvasStage = forwardRef<StageType, CanvasStageProps>(function Canv
   const canvasHeight = useCanvasStore((state) => state.canvasHeight);
   const backgroundColor = useCanvasStore((state) => state.backgroundColor);
   const isTransparent = backgroundColor === "transparent";
-  const [checkerImage] = useImage(isTransparent ? "/images/checkerboard.svg" : undefined, "anonymous");
   const drawingRef = useRef<{
     id: string;
     tool: "line" | "freehand";
@@ -202,8 +201,10 @@ export const CanvasStage = forwardRef<StageType, CanvasStageProps>(function Canv
         store.mutateElement(drawing.id, { points: [0, 0, offsetX, offsetY] });
       } else {
         const element = store.elements.find((el) => el.id === drawing.id);
-        const currentPoints = element?.points ?? [0, 0];
-        store.mutateElement(drawing.id, { points: [...currentPoints, offsetX, offsetY] });
+        if (element && (element.type === "line" || element.type === "freehand")) {
+          const currentPoints = element.points ?? [0, 0];
+          store.mutateElement(drawing.id, { points: [...currentPoints, offsetX, offsetY] });
+        }
       }
     },
     [activeTool, eraseAt]
@@ -220,6 +221,14 @@ export const CanvasStage = forwardRef<StageType, CanvasStageProps>(function Canv
         height={canvasHeight}
         ref={ref}
         className="rounded-2xl shadow-2xl"
+        style={
+          isTransparent
+            ? {
+                backgroundImage: "url('/images/checkerboard.svg')",
+                backgroundSize: "32px 32px",
+              }
+            : undefined
+        }
         onMouseDown={handlePointerDown}
         onMouseMove={handlePointerMove}
         onMouseUp={endDrawing}
@@ -234,8 +243,6 @@ export const CanvasStage = forwardRef<StageType, CanvasStageProps>(function Canv
             y={0}
             width={canvasWidth}
             height={canvasHeight}
-            fillPatternImage={isTransparent ? checkerImage ?? undefined : undefined}
-            fillPatternScale={isTransparent && checkerImage ? { x: 0.5, y: 0.5 } : undefined}
             fill={isTransparent ? undefined : backgroundColor}
             listening={false}
           />

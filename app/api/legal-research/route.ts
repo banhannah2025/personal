@@ -77,9 +77,15 @@ export async function POST(request: Request) {
       max_output_tokens: 1500,
     });
 
-    const content = completion.output?.[0]?.content?.[0];
+    type OutputText = { type: "output_text"; text: string };
+    type OutputMessage = { type: "message"; content: OutputText[] };
+    const firstOutput = completion.output?.[0] as OutputText | OutputMessage | undefined;
     const answer =
-      content && content.type === "output_text" ? content.text : JSON.stringify(completion.output);
+      (firstOutput?.type === "message"
+        ? firstOutput.content.find((part) => part.type === "output_text")?.text
+        : firstOutput?.type === "output_text"
+        ? firstOutput.text
+        : null) ?? JSON.stringify(completion.output ?? []);
 
     const citations = chunks.map((chunk, index) => ({
       source: `Source ${index + 1}`,

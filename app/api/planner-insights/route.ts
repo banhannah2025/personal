@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-5.1-chat-latest",
-      max_completion_tokens: 600,
+      max_tokens: 600,
       response_format: { type: "json_object" },
       messages: [
         {

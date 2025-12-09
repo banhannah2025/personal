@@ -609,7 +609,7 @@ export default function AppDashboardPage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const email =
     user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? null;
-  const isAdmin = isSignedIn && !!user && isAdminFromMetadata(user.publicMetadata, email);
+  const isAdmin = Boolean(isSignedIn && !!user && isAdminFromMetadata(user.publicMetadata, email));
   const userTier = useMemo(
     () => deriveTierFromMetadata(user?.publicMetadata, { isAdmin }),
     [user?.publicMetadata, isAdmin]
@@ -634,8 +634,8 @@ export default function AppDashboardPage() {
         const tierUnlocked = !isLocked(userTier, tool.minTier);
         const previewTierUnlocked = !isLocked(activeTier, tool.minTier);
         const adminUnlocked = !tool.requiresAdmin || isAdmin;
-        const hasAccess = tierUnlocked && adminUnlocked;
-        const previewHasAccess = previewTierUnlocked && adminUnlocked;
+        const hasAccess = Boolean(tierUnlocked && adminUnlocked);
+        const previewHasAccess = Boolean(previewTierUnlocked && adminUnlocked);
         let badgeLabel: string;
         if (hasAccess) {
           badgeLabel = previewHasAccess ? "Included" : "Included · hidden in preview";

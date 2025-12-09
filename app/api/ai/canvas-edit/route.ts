@@ -3,8 +3,22 @@ import { currentUser } from "@clerk/nextjs/server";
 import { openaiClient, DEFAULT_COMPLETION_MODEL } from "@/lib/aiClients";
 import type { CanvasElement } from "@/app/app/digital-canvas/types";
 
-type CanvasElementSnapshot = Pick<CanvasElement, "id" | "type" | "x" | "y" | "rotation" | "opacity"> &
-  Partial<Pick<CanvasElement, "width" | "height" | "fill" | "text" | "fontSize" | "borderRadius" | "fontFamily" | "align" >>;
+type CanvasElementSnapshot = {
+  id: CanvasElement["id"];
+  type: CanvasElement["type"];
+  x: number;
+  y: number;
+  rotation: number;
+  opacity: number;
+  width?: number;
+  height?: number;
+  fill?: string;
+  text?: string;
+  fontSize?: number;
+  borderRadius?: number;
+  fontFamily?: string;
+  align?: "left" | "center" | "right";
+};
 
 type AiEditResponse = {
   edits?: Array<{ id: string; updates: Partial<CanvasElementSnapshot> }>;
@@ -52,10 +66,10 @@ function fallbackResponse(message: string) {
 
 type AiContentChunk = { type: string; text?: string; json?: unknown };
 type AiResponseBlock = { content?: AiContentChunk[] };
-type AiResponsePayload = { output?: AiResponseBlock[] };
+type AiResponsePayload = { output?: unknown };
 
 function extractJson<T>(response: AiResponsePayload): T | null {
-  const blocks = response.output ?? [];
+  const blocks = (response.output ?? []) as AiResponseBlock[];
   for (const block of blocks) {
     for (const item of block.content ?? []) {
       if (item.type === "output_json" && item.json) {
@@ -138,7 +152,6 @@ export async function POST(request: Request) {
           content: `Current layers:\n${JSON.stringify(serialized, null, 2)}\n\nInstruction: ${prompt}`,
         },
       ],
-      response_format: { type: "json_object" },
       max_output_tokens: 800,
     });
 
