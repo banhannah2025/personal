@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdminClient } from "@/lib/supabase";
 
@@ -14,7 +14,7 @@ async function requireUser() {
   return user;
 }
 
-export async function POST(request: Request, { params }: Params) {
+export async function POST(request: NextRequest, { params }: Params) {
   try {
     const user = await requireUser();
     if (!supabaseAdminClient) {
