@@ -8,6 +8,9 @@ import type { SubscriptionTierId } from "@/lib/subscription";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+type ClerkClientType = Awaited<ReturnType<typeof clerkClient>>;
+type UpdateUserPayload = Parameters<ClerkClientType["users"]["updateUser"]>[1];
+
 type BillingMetadataUpdate = {
   userId: string;
   tier?: SubscriptionTierId;
@@ -59,7 +62,7 @@ async function updateUserBillingMetadata(update: BillingMetadataUpdate) {
     publicMetadata.subscriptionTier = update.tier;
   }
 
-  const payload: Parameters<typeof clerkClient.users.updateUser>[1] = {};
+  const payload: UpdateUserPayload = {};
   if (Object.keys(publicMetadata).length > 0) {
     payload.publicMetadata = publicMetadata;
   }
@@ -71,12 +74,14 @@ async function updateUserBillingMetadata(update: BillingMetadataUpdate) {
     return;
   }
 
-  await clerkClient.users.updateUser(update.userId, payload);
+  const client = await clerkClient();
+  await client.users.updateUser(update.userId, payload);
 }
 
 async function findUserIdByEmail(email?: string | null) {
   if (!email) return null;
-  const list = await clerkClient.users.getUserList({
+  const client = await clerkClient();
+  const list = await client.users.getUserList({
     emailAddress: [email],
     limit: 1,
   });
@@ -193,4 +198,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ received: true });
 }
-
