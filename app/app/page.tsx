@@ -616,6 +616,10 @@ export default function AppDashboardPage() {
   );
   const [tierPreview, setTierPreview] = useState<TierId | null>(null);
   const [mobileToolboxOpen, setMobileToolboxOpen] = useState(false);
+  const [checkoutTierLoading, setCheckoutTierLoading] = useState<TierId | null>(null);
+  const [billingError, setBillingError] = useState<string | null>(null);
+  const [billingMessage, setBillingMessage] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const userTierDetails = useMemo(
     () => subscriptionTiers.find((tier) => tier.id === userTier) ?? subscriptionTiers[0],
@@ -627,6 +631,8 @@ export default function AppDashboardPage() {
     [activeTier]
   );
   const isPreviewing = tierPreview !== null;
+  const userIsPaid = userTier !== "free";
+  const canCheckoutActiveTier = activeTier !== userTier && activeTier !== "free";
 
   const annotatedLaunchers = useMemo<AnnotatedLauncher[]>(
     () =>
@@ -679,6 +685,76 @@ export default function AppDashboardPage() {
   const resetTierPreview = () => setTierPreview(null);
   const handleTierSelect = (tierId: TierId) => {
     setTierPreview(tierId === userTier ? null : tierId);
+  };
+  const startCheckout = async (tierId: TierId) => {
+    if (tierId === "free") {
+      setBillingError("Select the Plus or Pro plan to upgrade.");
+      return;
+    }
+    setCheckoutTierLoading(tierId);
+    setBillingError(null);
+    setBillingMessage("Redirecting you to Stripe…");
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const payload = {
+        tier: tierId,
+        origin: origin || undefined,
+        successUrl: origin ? `${origin}/app?checkout=success` : undefined,
+        cancelUrl: origin ? `${origin}/app?checkout=cancelled` : undefined,
+      };
+      const response = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Unable to start checkout.");
+      }
+      window.location.assign(data.url);
+    } catch (error) {
+      console.error(error);
+      setBillingMessage(null);
+      setBillingError(
+        error instanceof Error
+          ? error.message
+          : "Unable to start checkout. Please try again."
+      );
+    } finally {
+      setCheckoutTierLoading(null);
+    }
+  };
+  const openBillingPortal = async () => {
+    setPortalLoading(true);
+    setBillingError(null);
+    setBillingMessage("Opening the Stripe billing portal…");
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const payload = {
+        origin: origin || undefined,
+        returnUrl: origin ? `${origin}/app?checkout=manage` : undefined,
+      };
+      const response = await fetch("/api/billing/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Unable to open the billing portal.");
+      }
+      window.location.assign(data.url);
+    } catch (error) {
+      console.error(error);
+      setBillingMessage(null);
+      setBillingError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load the billing portal. Please try again."
+      );
+    } finally {
+      setPortalLoading(false);
+    }
   };
 
   return (
@@ -744,7 +820,7 @@ export default function AppDashboardPage() {
           <h2 className="mt-3 text-2xl font-semibold">Choose your tier</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Switch tiers to preview which tools unlock. You are currently on the {userTierDetails.label} plan.
-            Upgrades will flow through billing once authentication is live.
+            Launch Stripe checkout to upgrade or open the billing portal to manage your membership.
           </p>
           {isPreviewing ? (
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-primary">
@@ -805,6 +881,41 @@ export default function AppDashboardPage() {
               ))}
             </ul>
           </div>
+          {(canCheckoutActiveTier || userIsPaid) && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {canCheckoutActiveTier ? (
+                <Button
+                  size="sm"
+                  onClick={() => startCheckout(activeTier)}
+                  disabled={checkoutTierLoading === activeTier}
+                >
+                  {checkoutTierLoading === activeTier
+                    ? "Redirecting…"
+                    : `Upgrade to ${activeTierDetails.label}`}
+                </Button>
+              ) : null}
+              {userIsPaid ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openBillingPortal}
+                  disabled={portalLoading}
+                >
+                  {portalLoading ? "Opening portal…" : "Manage billing"}
+                </Button>
+              ) : null}
+            </div>
+          )}
+          {(billingError || billingMessage) && (
+            <p
+              className={cn(
+                "mt-3 text-xs",
+                billingError ? "text-destructive" : "text-primary"
+              )}
+            >
+              {billingError ?? billingMessage}
+            </p>
+          )}
         </aside>
       </section>
 

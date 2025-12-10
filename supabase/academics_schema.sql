@@ -43,3 +43,12 @@ create table if not exists ai_research_sources (
   storage_path text default '',
   created_at timestamptz not null default now()
 );
+
+alter table if exists ai_research_sources enable row level security;
+drop policy if exists "Service role manages ai_research_sources" on ai_research_sources;
+create policy "Service role manages ai_research_sources"
+  on ai_research_sources
+  for all
+  to service_role
+  using (true)
+  with check (true);

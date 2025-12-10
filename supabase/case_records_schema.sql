@@ -19,12 +19,15 @@ alter table case_records
 create index if not exists case_records_user_idx on case_records (user_id, updated_at desc);
 
 create or replace function set_case_records_updated_at()
-returns trigger as $$
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 drop trigger if exists trg_case_records_updated_at on case_records;
 

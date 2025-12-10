@@ -27,12 +27,15 @@ alter table word_documents
 create index if not exists word_documents_user_idx on word_documents (user_id, updated_at desc);
 
 create or replace function set_word_documents_updated_at()
-returns trigger as $$
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 drop trigger if exists trg_word_documents_updated_at on word_documents;
 

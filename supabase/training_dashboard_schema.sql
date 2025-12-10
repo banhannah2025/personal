@@ -1,6 +1,17 @@
 -- Enable required extensions
 create extension if not exists pgcrypto;
-create extension if not exists vector;
+
+create schema if not exists extensions;
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'vector') then
+    execute 'alter extension vector set schema extensions';
+  else
+    execute 'create extension vector with schema extensions';
+  end if;
+end
+$$;
 
 -- Enum definitions
 do $$
@@ -291,3 +302,205 @@ create table if not exists academic_projects (
 );
 
 create index if not exists academic_projects_user_idx on academic_projects (user_id);
+
+-- -----------------------------------------------------------------------------
+-- Row Level Security & policies
+-- -----------------------------------------------------------------------------
+alter table if exists domains enable row level security;
+drop policy if exists "Service role access to domains" on domains;
+create policy "Service role access to domains"
+  on domains
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists corpus_collections enable row level security;
+drop policy if exists "Service role access to corpus_collections" on corpus_collections;
+create policy "Service role access to corpus_collections"
+  on corpus_collections
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists documents enable row level security;
+drop policy if exists "Service role access to documents" on documents;
+create policy "Service role access to documents"
+  on documents
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists document_chunks enable row level security;
+drop policy if exists "Service role access to document_chunks" on document_chunks;
+create policy "Service role access to document_chunks"
+  on document_chunks
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists prompt_templates enable row level security;
+drop policy if exists "Service role access to prompt_templates" on prompt_templates;
+create policy "Service role access to prompt_templates"
+  on prompt_templates
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists draft_templates enable row level security;
+drop policy if exists "Service role access to draft_templates" on draft_templates;
+create policy "Service role access to draft_templates"
+  on draft_templates
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists training_sessions enable row level security;
+drop policy if exists "Service role access to training_sessions" on training_sessions;
+create policy "Service role access to training_sessions"
+  on training_sessions
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists session_runs enable row level security;
+drop policy if exists "Service role access to session_runs" on session_runs;
+create policy "Service role access to session_runs"
+  on session_runs
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists session_documents enable row level security;
+drop policy if exists "Service role access to session_documents" on session_documents;
+create policy "Service role access to session_documents"
+  on session_documents
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists generated_documents enable row level security;
+drop policy if exists "Service role access to generated_documents" on generated_documents;
+create policy "Service role access to generated_documents"
+  on generated_documents
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists source_citations enable row level security;
+drop policy if exists "Service role access to source_citations" on source_citations;
+create policy "Service role access to source_citations"
+  on source_citations
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists feedback_entries enable row level security;
+drop policy if exists "Service role access to feedback_entries" on feedback_entries;
+create policy "Service role access to feedback_entries"
+  on feedback_entries
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists knowledge_notes enable row level security;
+drop policy if exists "Service role access to knowledge_notes" on knowledge_notes;
+create policy "Service role access to knowledge_notes"
+  on knowledge_notes
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists validation_rules enable row level security;
+drop policy if exists "Service role access to validation_rules" on validation_rules;
+create policy "Service role access to validation_rules"
+  on validation_rules
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists validation_runs enable row level security;
+drop policy if exists "Service role access to validation_runs" on validation_runs;
+create policy "Service role access to validation_runs"
+  on validation_runs
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists ingestion_jobs enable row level security;
+drop policy if exists "Service role access to ingestion_jobs" on ingestion_jobs;
+create policy "Service role access to ingestion_jobs"
+  on ingestion_jobs
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists retraining_jobs enable row level security;
+drop policy if exists "Service role access to retraining_jobs" on retraining_jobs;
+create policy "Service role access to retraining_jobs"
+  on retraining_jobs
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+alter table if exists legal_projects enable row level security;
+drop policy if exists "Users can view their legal projects" on legal_projects;
+create policy "Users can view their legal projects"
+  on legal_projects
+  for select
+  using (auth.uid()::text = user_id);
+drop policy if exists "Users can insert their legal projects" on legal_projects;
+create policy "Users can insert their legal projects"
+  on legal_projects
+  for insert
+  with check (auth.uid()::text = user_id);
+drop policy if exists "Users can update their legal projects" on legal_projects;
+create policy "Users can update their legal projects"
+  on legal_projects
+  for update
+  using (auth.uid()::text = user_id)
+  with check (auth.uid()::text = user_id);
+drop policy if exists "Users can delete their legal projects" on legal_projects;
+create policy "Users can delete their legal projects"
+  on legal_projects
+  for delete
+  using (auth.uid()::text = user_id);
+
+alter table if exists academic_projects enable row level security;
+drop policy if exists "Users can view their academic projects" on academic_projects;
+create policy "Users can view their academic projects"
+  on academic_projects
+  for select
+  using (auth.uid()::text = user_id);
+drop policy if exists "Users can insert their academic projects" on academic_projects;
+create policy "Users can insert their academic projects"
+  on academic_projects
+  for insert
+  with check (auth.uid()::text = user_id);
+drop policy if exists "Users can update their academic projects" on academic_projects;
+create policy "Users can update their academic projects"
+  on academic_projects
+  for update
+  using (auth.uid()::text = user_id)
+  with check (auth.uid()::text = user_id);
+drop policy if exists "Users can delete their academic projects" on academic_projects;
+create policy "Users can delete their academic projects"
+  on academic_projects
+  for delete
+  using (auth.uid()::text = user_id);

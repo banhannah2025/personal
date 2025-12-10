@@ -11,12 +11,15 @@ create table if not exists slide_decks (
 create index if not exists slide_decks_user_idx on slide_decks (user_id, updated_at desc);
 
 create or replace function set_slide_decks_updated_at()
-returns trigger as $$
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 drop trigger if exists trg_slide_decks_updated_at on slide_decks;
 

@@ -18,6 +18,7 @@ returns table (
   metadata jsonb
 )
 language plpgsql
+set search_path = public, pg_temp
 as $$
 begin
   return query
