@@ -10,9 +10,6 @@ export function getStripeClient() {
   if (!secretKey) {
     throw new Error("Stripe secret key (STRIPE_SECRET_KEY) is not configured.");
   }
-  stripeClient = new Stripe(secretKey, {
-    apiVersion: "2024-06-20",
-  });
+  stripeClient = new Stripe(secretKey);
   return stripeClient;
 }
-
