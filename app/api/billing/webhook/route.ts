@@ -21,7 +21,16 @@ type BillingMetadataUpdate = {
 
 const ACTIVE_STATUSES: Array<Stripe.Subscription.Status> = ["active", "trialing", "past_due"];
 
-function normalizeStripeId(raw: string | Stripe.Customer | Stripe.Subscription | null | undefined) {
+function normalizeStripeId(
+  raw:
+    | string
+    | Stripe.Customer
+    | Stripe.DeletedCustomer
+    | Stripe.Subscription
+    | Stripe.DeletedSubscription
+    | null
+    | undefined
+) {
   if (!raw) return null;
   if (typeof raw === "string") return raw;
   return raw.id;
